@@ -7,6 +7,10 @@ public static class EcnryptionExtension
 {
     public static string Hash256(this string value, string secretKey)
     {
+        if (value == null)
+        {
+            throw new ArgumentException("Can't Hash null value");
+        }
         using var sha256 = SHA256.Create();
         var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes($"{value}.{secretKey}"));
         var sb = new StringBuilder();

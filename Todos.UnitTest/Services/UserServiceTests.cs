@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Bogus;
 using FluentAssertions;
 using NSubstitute;
@@ -116,5 +118,44 @@ public class UserServiceTests
             { Username = _savedUser.Username, Password = _faker.Random.Word() };
         var result = () => _sut.LogIn(logInDto);
         result.Should().ThrowAsync<DomainException>("Password not correct");
+    }
+
+    [Fact]
+    public async Task LogIn_ShouldSucceed_WhenUsernameAndPasswordIsCorrect()
+    {
+        var logInDto = new LogInDto { Username = _savedUser.Username, Password = _savedUserPassword };
+        var result = await _sut.LogIn(logInDto);
+        result.Should().NotBeNull();
+        result.Username.Should().Be(_savedUser.Username);
+    }
+
+    [Fact]
+    public async Task GetUserByName_ShouldReturnNull_WhenUserDoesnotExist()
+    {
+        var faker = new Faker();
+        var result = await _sut.GetUserByName(faker.Person.UserName);
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetUserByName_ShouldReturnSuccessfully_WhenUsernameExists()
+    {
+        var result = await _sut.GetUserByName(_savedUser.Username);
+        result.Should().NotBeNull();
+        result.Username.Should().Be(_savedUser.Username);
+        result.Id.Should().Be(_savedUser.Id);
+        result.IsActive.Should().Be(_savedUser.IsActive);
+    }
+
+    [Fact]
+    public async Task GetAllUsers_ShouldReturnOneSuccessfully_WhenOnlyOneInRepository()
+    {
+        _userRepository.GetAll().Returns(Task.FromResult(
+            new List<User>{ _savedUser}.AsEnumerable()
+        ));
+        var result = await _sut.GetAllUsers();
+        result.Should().NotBeNull();
+        result.Count().Should().Be(1);
+        result.First().Username.Should().Be(_savedUser.Username);
     }
 }

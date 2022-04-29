@@ -80,6 +80,10 @@ public class UserService
     public async Task<UserDto> GetUserByName(string userName)
     {
         var user = await _userRepository.GetByName(userName);
+        if (user == null)
+        {
+            return null;
+        }
         return user.ToDto();
     }
 
