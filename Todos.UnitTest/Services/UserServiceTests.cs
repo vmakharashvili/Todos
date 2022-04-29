@@ -86,7 +86,7 @@ public class UserServiceTests
         var result = () => _sut.LogIn(cmd);
         result.Should().ThrowAsync<DomainException>("Username Required");
 
-        cmd.Username = _savedUser.Username;
+        cmd = cmd with { Username = _savedUser.Username };
         result = () => _sut.LogIn(cmd);
         result.Should().ThrowAsync<DomainException>("Password Required");
     }

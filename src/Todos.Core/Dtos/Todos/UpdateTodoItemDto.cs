@@ -1,6 +1,6 @@
 ﻿namespace Todos.Core.Dtos.Todos;
 
-public class UpdateTodoItemDto : CreateTodoItemDto
+public record UpdateTodoItemDto : CreateTodoItemDto
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
 }

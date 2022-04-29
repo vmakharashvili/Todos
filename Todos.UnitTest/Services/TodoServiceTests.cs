@@ -94,4 +94,24 @@ public class TodoServiceTests
         result.Should().NotBeNull();
         result.Description.Should().Be(dto.Description);
     }
+
+    [Fact]
+    public void Update_ShouldThrow_WhenTodoItemNotInRepository()
+    {
+        _todoItemsRepository.GetById(_savedTodoItem.Id).Returns(Task.FromResult<TodoItem>(null));
+        var dto = new UpdateTodoItemDto() { Id = _savedTodoItem.Id, Description = _faker.Lorem.Sentence() };
+        var result = () => _sut.Update(dto);
+        result.Should().ThrowAsync<DomainException>($"No such TodoItem with id {_savedTodoItem.Id}");
+    }
+
+    [Fact]
+    public async Task Update_ShouldCompleteSuccessfully_WhenItemIsInRepositoryAndValid()
+    {
+        var faker2 = new Faker();
+        var previousDescription = _savedTodoItem.Description;
+        _todoItemsRepository.GetById(_savedTodoItem.Id).Returns(_savedTodoItem);
+        var dto = new UpdateTodoItemDto() { Id = _savedTodoItem.Id, Description = faker2.Lorem.Sentence() };
+        await _sut.Update(dto);
+        _todoItemsRepository.Received(1).Update(Arg.Is<TodoItem>(x => x.Description != previousDescription && x.Description == dto.Description));
+    }
 }
