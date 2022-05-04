@@ -25,7 +25,7 @@ public class ErrorHandlingMiddleware
         }
     }
 
-    private async Task HandleException(Exception exception, HttpContext context, ILogger<ErrorHandlingMiddleware> logger)
+    private static async Task HandleException(Exception exception, HttpContext context, ILogger<ErrorHandlingMiddleware> logger)
     {
         var code = HttpStatusCode.InternalServerError;
 
@@ -39,10 +39,10 @@ public class ErrorHandlingMiddleware
             code = HttpStatusCode.Unauthorized;
         }
 
-        var result = JsonSerializer.Serialize(new
+        var result = new
         {
             Error = exception.Message
-        });
+        };
 
         if (code != HttpStatusCode.BadRequest)
         {

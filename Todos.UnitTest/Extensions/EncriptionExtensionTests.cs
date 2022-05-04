@@ -9,13 +9,11 @@ namespace Todos.UnitTest.Extensions;
 
 public class EncriptionExtensionTests
 {
-    private readonly Faker _faker;
     private readonly ITestOutputHelper _testOutputHelper;
 
     public EncriptionExtensionTests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
-        _faker = new Faker();
     }
     
     [Theory]

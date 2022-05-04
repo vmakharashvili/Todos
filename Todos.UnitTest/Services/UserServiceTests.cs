@@ -36,7 +36,7 @@ public class UserServiceTests
             Id = _faker.Random.Int(), Username = _faker.Person.UserName, IsActive = true,
             PasswordHash = _savedUserPassword.Hash256(_settings.SecretKey)
         };
-        _userRepository.GetByName(_savedUser.Username).Returns(Task.FromResult(_savedUser));
+        _userRepository.GetByName(_savedUser.Username!).Returns(Task.FromResult<User?>(_savedUser));
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class UserServiceTests
         {
             Id = _faker.Random.Int(1, 100), Username = _faker.Random.Word(), IsActive = true
         };
-        _userRepository.GetByName(otherUser.Username).Returns(Task.FromResult(otherUser));
+        _userRepository.GetByName(otherUser.Username).Returns(Task.FromResult<User?>(otherUser));
         var result = () => _sut.Create(
             new CreateUserDto{ Username = otherUser.Username, Password = _faker.Random.Word() });
         result.Should().ThrowAsync<DomainException>("Such username is already taken. Use different one");
@@ -69,7 +69,7 @@ public class UserServiceTests
         var cmd = new CreateUserDto() { Username = faker.Person.UserName, Password = faker.Random.Word() };
         var savedUser = new User
         {
-            Id = faker.Random.Int(), Username = cmd.Username, PasswordHash = cmd.Password.Hash256(_settings.SecretKey),
+            Id = faker.Random.Int(), Username = cmd.Username, PasswordHash = cmd.Password.Hash256(_settings.SecretKey!),
             IsActive = true
         };
         _userRepository.Create(Arg.Is<User>(x => x.Username == cmd.Username)).Returns(Task.FromResult(savedUser));
@@ -105,7 +105,7 @@ public class UserServiceTests
     {
         var faker = new Faker();
         var inactiveUser = new User { Id = faker.Random.Int(), Username = faker.Person.UserName, IsActive = false };
-        _userRepository.GetByName(inactiveUser.Username).Returns(Task.FromResult(inactiveUser));
+        _userRepository.GetByName(inactiveUser.Username).Returns(Task.FromResult<User?>(inactiveUser));
         var result = () => _sut.LogIn(new LogInDto()
             { Username = inactiveUser.Username, Password = faker.Random.Word() });
         result.Should().ThrowAsync<DomainException>("User not active");
@@ -140,9 +140,9 @@ public class UserServiceTests
     [Fact]
     public async Task GetUserByName_ShouldReturnSuccessfully_WhenUsernameExists()
     {
-        var result = await _sut.GetUserByName(_savedUser.Username);
+        var result = await _sut.GetUserByName(_savedUser.Username!);
         result.Should().NotBeNull();
-        result.Username.Should().Be(_savedUser.Username);
+        result!.Username.Should().Be(_savedUser.Username);
         result.Id.Should().Be(_savedUser.Id);
         result.IsActive.Should().Be(_savedUser.IsActive);
     }

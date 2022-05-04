@@ -21,8 +21,8 @@ public class TodoServiceTests
     private readonly ITodoItemsRepository _todoItemsRepository;
     private readonly IAuthService _authService;
     private readonly Faker _faker;
-    private TodoItem _savedTodoItem;
-    private User _user;
+    private readonly TodoItem _savedTodoItem;
+    private readonly User _user;
 
     public TodoServiceTests()
     {
@@ -69,7 +69,7 @@ public class TodoServiceTests
     }
 
     [Fact]
-    public async Task Create_ShouldThrow_WhenDescriptionIsNull()
+    public void Create_ShouldThrow_WhenDescriptionIsNull()
     {
         var dto = new CreateTodoItemDto() { };
         var result = () => _sut.Create(dto);
@@ -77,10 +77,10 @@ public class TodoServiceTests
     }
 
     [Fact]
-    public async Task Create_ShouldThrow_WhenParentIdDoesnotExistInRepository()
+    public void Create_ShouldThrow_WhenParentIdDoesnotExistInRepository()
     {
         var dto = new CreateTodoItemDto() { Description = _faker.Lorem.Sentence(), ParentId = _faker.Random.Guid() };
-        _todoItemsRepository.GetById(dto.ParentId.Value).Returns(Task.FromResult<TodoItem>(null));
+        _todoItemsRepository.GetById(dto.ParentId.Value).Returns(Task.FromResult<TodoItem?>(null));
         var result = () => _sut.Create(dto);
         result.Should().ThrowAsync<DomainException>($"No TodoItem with id {dto.ParentId.Value}");
     }
@@ -98,7 +98,7 @@ public class TodoServiceTests
     [Fact]
     public void Update_ShouldThrow_WhenTodoItemNotInRepository()
     {
-        _todoItemsRepository.GetById(_savedTodoItem.Id).Returns(Task.FromResult<TodoItem>(null));
+        _todoItemsRepository.GetById(_savedTodoItem.Id).Returns(Task.FromResult<TodoItem?>(null));
         var dto = new UpdateTodoItemDto() { Id = _savedTodoItem.Id, Description = _faker.Lorem.Sentence() };
         var result = () => _sut.Update(dto);
         result.Should().ThrowAsync<DomainException>($"No such TodoItem with id {_savedTodoItem.Id}");
@@ -112,6 +112,56 @@ public class TodoServiceTests
         _todoItemsRepository.GetById(_savedTodoItem.Id).Returns(_savedTodoItem);
         var dto = new UpdateTodoItemDto() { Id = _savedTodoItem.Id, Description = faker2.Lorem.Sentence() };
         await _sut.Update(dto);
-        _todoItemsRepository.Received(1).Update(Arg.Is<TodoItem>(x => x.Description != previousDescription && x.Description == dto.Description));
+        await _todoItemsRepository.Received(1).Update(Arg.Is<TodoItem>(x => x.Description != previousDescription && x.Description == dto.Description));
+    }
+
+    [Fact]
+    public void Create_ShouldThrow_WhenStartTimeIsInPast()
+    {
+        var dto = new CreateTodoItemDto() { Description = _faker.Lorem.Sentence(), StartTime = _faker.Date.Past() };
+        var result = () => _sut.Create(dto);
+        result.Should().ThrowAsync<DomainException>("Start time can't be in the past");
+    }
+
+    [Fact]
+    public void Create_ShouldThrow_WhenEndtimeIsBeforeStartTime()
+    {
+        var dto = new CreateTodoItemDto { 
+            Description = _faker.Lorem.Sentence(), 
+            EndTime = _faker.Date.Between(DateTime.Now, 
+            _faker.Date.Future()), 
+            StartTime=_faker.Date.Future() 
+        };
+        var result = () => _sut.Create(dto);
+        result.Should().ThrowAsync<DomainException>("End time can't be prior to start time");
+    }
+
+    [Fact]
+    public void Create_ShouldThrow_WhenStarttimeIsNullAndEndtimeIsInPast()
+    {
+        var dto = new CreateTodoItemDto
+        {
+            Description = _faker.Lorem.Sentence(),
+            EndTime = _faker.Date.Past()
+        };
+        var result = () => _sut.Create(dto);
+        result.Should().ThrowAsync<DomainException>("End time can't be in the past");
+    }
+
+    [Fact]
+    public void MakeItDone_ShouldThrow_WhenTodoItemDoesnotExist()
+    {
+        var randomGuid = _faker.Random.Guid();
+        var result = () => _sut.MakeItDone(randomGuid, true);
+        result.Should().ThrowAsync<DomainException>($"No such TodoItem with id {randomGuid}");
+    }
+
+    [Fact]
+    public async void MakeItDonw_ShouldSucceed_WhenTodoItemExists()
+    {
+        var approval = _faker.Random.Bool();
+        _todoItemsRepository.GetById(_savedTodoItem.Id).Returns(_savedTodoItem);
+        await _sut.MakeItDone(_savedTodoItem.Id, approval);
+        await _todoItemsRepository.Received(1).Update(Arg.Is<TodoItem>(x => x.Id == _savedTodoItem.Id && x.IsDone == approval));
     }
 }

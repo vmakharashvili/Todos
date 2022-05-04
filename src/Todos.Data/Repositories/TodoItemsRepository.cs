@@ -29,8 +29,11 @@ public class TodoItemsRepository : ITodoItemsRepository
     public async Task Delete(Guid id)
     {
         var todoItem = await _context.Todos.FirstOrDefaultAsync(x => x.Id == id);
-        _context.Todos.Remove(todoItem);
-        await _context.SaveChangesAsync();
+        if (todoItem != null)
+        {
+            _context.Todos.Remove(todoItem);
+            await _context.SaveChangesAsync();
+        }
     }
 
     public async Task<IEnumerable<TodoItem>> GetByUserId(int userId)
@@ -38,7 +41,7 @@ public class TodoItemsRepository : ITodoItemsRepository
         return await _context.Todos.Where(x => x.UserId == userId).ToListAsync();
     }
 
-    public Task<TodoItem> GetById(Guid id)
+    public Task<TodoItem?> GetById(Guid id)
     {
         return _context.Todos.FirstOrDefaultAsync(x => x.Id == id);
     }

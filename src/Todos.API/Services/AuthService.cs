@@ -31,14 +31,24 @@ public class AuthService : IAuthService
 
     public string GetUserToken(UserDto user)
     {
-        var claims = new List<Claim>();
-        claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
-        claims.Add(new Claim(ClaimTypes.GivenName, user.Username));
+        if(user?.Username == null)
+        {
+            throw new ArgumentNullException(nameof(user), "User is null");
+        }
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.GivenName, user.Username)
+        };
         return new JwtSecurityTokenHandler().WriteToken(GetToken(claims));
     }
 
     private JwtSecurityToken GetToken(List<Claim> claims)
     {
+        if(_settings?.Jwt?.Secret == null)
+        {
+            throw new ArgumentException("JWT Secret required");
+        }
         var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Jwt.Secret));
         var token = new JwtSecurityToken(expires: DateTime.Now.AddDays(1), claims: claims,
             signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256));

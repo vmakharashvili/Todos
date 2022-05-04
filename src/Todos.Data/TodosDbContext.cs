@@ -17,7 +17,7 @@ public class TodosDbContext : DbContext
     {
         modelBuilder.Entity<TodoItem>().HasOne(x => x.User).WithMany(x => x.TodoItems)
             .HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
-        modelBuilder.Entity<User>().HasData(new User()
+        modelBuilder.Entity<User>().HasData(new User
         {
             Id = 1,
             Username = "Admin",

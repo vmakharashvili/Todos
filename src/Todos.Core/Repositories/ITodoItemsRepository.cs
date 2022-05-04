@@ -8,5 +8,5 @@ public interface ITodoItemsRepository
     Task Update(TodoItem todoItem);
     Task Delete(Guid id);
     Task<IEnumerable<TodoItem>> GetByUserId(int userId);
-    Task<TodoItem> GetById(Guid id);
+    Task<TodoItem?> GetById(Guid id);
 }

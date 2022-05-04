@@ -27,14 +27,14 @@ public class UserController : Controller
     }
 
     [HttpPost]
-    public async Task<UserDto> Create(CreateUserDto model)
+    public async Task<UserDto> Create([FromBody] CreateUserDto model)
     {
         return await _userService.Create(model);
     }
 
     [AllowAnonymous]
     [HttpPost("LogIn")]
-    public async Task<IActionResult> LogIn(LogInDto model)
+    public async Task<IActionResult> LogIn([FromBody] LogInDto model)
     {
         var user = await _userService.LogIn(model);
         var token = _authService.GetUserToken(user);

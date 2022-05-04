@@ -13,7 +13,7 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public Task<User> GetByName(string username)
+    public Task<User?> GetByName(string username)
     {
         return _context.Users.Where(x => x.Username == username).FirstOrDefaultAsync();
     }

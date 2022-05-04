@@ -24,9 +24,14 @@ public class TodoService
         return todos.ToDtos();
     }
 
-    public async Task<TodoItemDto> Create(CreateTodoItemDto model)
+    public async Task<TodoItemDto> Create(CreateTodoItemDto? model)
     {
+        if(model == null)
+        {
+            throw new ArgumentException("model is null");
+        }
         await ValidateParentIdAndDescription(model);
+        ValidateStartAndEndTimes(model);
         
         var todoItem = new TodoItem()
         {
@@ -45,11 +50,12 @@ public class TodoService
     public async Task Update(UpdateTodoItemDto model)
     {
         await ValidateParentIdAndDescription(model);
+        ValidateStartAndEndTimes(model);
 
         var todoItem = await _todoItemsRepository.GetById(model.Id);
         if (todoItem == null)
         {
-            throw new DomainException($"No such TodoItem with id {todoItem.Id}");
+            throw new DomainException($"No such TodoItem with id {model.Id}");
         }
 
         todoItem.Description = model.Description;
@@ -90,6 +96,30 @@ public class TodoService
             {
                 throw new DomainException($"No TodoItem with id {model.ParentId.Value}");
             }
+        }
+    }
+
+    private static void ValidateStartAndEndTimes(CreateTodoItemDto model)
+    {
+        if (model.StartTime.HasValue)
+        {
+            if (model.StartTime.Value < DateTime.Now)
+            {
+                throw new DomainException("Start time can't be in the past");
+            }
+
+            if (model.EndTime.HasValue)
+            {
+                if (model.EndTime.Value < model.StartTime.Value)
+                {
+                    throw new DomainException("End time can't be prior to start time");
+                }
+            }
+        }
+
+        if (model.EndTime.HasValue && model.EndTime.Value < DateTime.Now)
+        {
+            throw new DomainException("End time can't be in the past");
         }
     }
 }

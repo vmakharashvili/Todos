@@ -77,7 +77,7 @@ public class UserService
         throw new DomainException("Password not correct");
     }
 
-    public async Task<UserDto> GetUserByName(string userName)
+    public async Task<UserDto?> GetUserByName(string userName)
     {
         var user = await _userRepository.GetByName(userName);
         if (user == null)

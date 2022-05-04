@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Todos.API.Filters;
 using Todos.API.Middlewares;
 using Todos.API.Services;
@@ -47,7 +48,32 @@ builder.Services.AddControllers(op =>
     op.Filters.Add<AuthFilter>();
 });
 
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(op =>
+{
+    op.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    {
+        Name="Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization header"
+    });
+    op.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecurityScheme()
+            {
+                Reference = new OpenApiReference()
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 var app = builder.Build();
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
